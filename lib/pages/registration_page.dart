@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:minor_proj/components/circle_blur.dart';
-import 'package:minor_proj/pages/registration_page.dart';
+import 'package:minor_proj/pages/login_page.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class RegistrationPage extends StatefulWidget {
+  const RegistrationPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<RegistrationPage> createState() => _RegistrationPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _RegistrationPageState extends State<RegistrationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -21,7 +21,7 @@ class _LoginPageState extends State<LoginPage> {
             top: -60,
             left: -30,
             child: CircleBlurWidget(
-              color: Colors.yellow,
+              color: Colors.cyanAccent,
               diameter: 270,
               blurSigma: 50, // Increase for more blur
             ),
@@ -39,8 +39,8 @@ class _LoginPageState extends State<LoginPage> {
             bottom: 200,
             left: -100,
             child: CircleBlurWidget(
-              color: Colors.lightGreenAccent.shade200,
-              diameter: 360,
+              color: Colors.orange,
+              diameter: 260,
               blurSigma: 50,
             ),
           ),
@@ -48,7 +48,7 @@ class _LoginPageState extends State<LoginPage> {
             bottom: -30,
             right: -30,
             child: CircleBlurWidget(
-              color: Colors.cyanAccent,
+              color: Colors.lightGreenAccent.shade200,
               diameter: 220,
               blurSigma: 50,
             ),
@@ -64,7 +64,7 @@ class _LoginPageState extends State<LoginPage> {
                   Padding(
                     padding: const EdgeInsets.only(top: 79.0),
                     child: Text(
-                      'Log In',
+                      'Sign Up',
                       style: TextStyle(
                         fontSize: MediaQuery.sizeOf(context).width * 0.18,
                         fontWeight: FontWeight.bold,
@@ -157,19 +157,19 @@ class _LoginPageState extends State<LoginPage> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        Text("New User?"),
+                        Text("Already a User?"),
                         TextButton(
                             onPressed: () {
                               Navigator.pushReplacement(
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) {
-                                    return RegistrationPage();
+                                    return LoginPage();
                                   },
                                 ),
                               );
                             },
-                            child: Text("Sign Up"))
+                            child: Text("Log In"))
                       ],
                     ),
                   )
