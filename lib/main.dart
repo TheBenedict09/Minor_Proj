@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:minor_proj/pages/login_page.dart';
 import 'dart:ui';
 
 import 'package:minor_proj/pages/welcome_page.dart';
@@ -14,7 +15,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: WelcomeScreen(),
+      home: LoginPage(),
     );
   }
 }

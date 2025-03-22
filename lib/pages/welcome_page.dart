@@ -26,12 +26,12 @@ class WelcomeScreen extends StatelessWidget {
             right: -80,
             child: CircleBlurWidget(
               color: Colors.purple,
-              diameter: 200,
+              diameter: 220,
               blurSigma: 65,
             ),
           ),
           Positioned(
-            bottom: 160,
+            bottom: 190,
             left: -70,
             child: CircleBlurWidget(
               color: Colors.yellow,
