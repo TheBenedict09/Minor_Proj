@@ -1,16 +1,36 @@
-# minor_proj
+Smart Food Expiry Tracker & Recipe Recommender
 
-A new Flutter project.
+This Flutter-based mobile application helps users track food expiry dates and receive personalized recipe recommendations based on available ingredients. It aims to reduce food waste and optimize meal planning with an intuitive interface and real-time inventory management.
 
-## Getting Started
+Features
 
-This project is a starting point for a Flutter application.
+✅ Food Inventory Tracking – Add, edit, and manage your kitchen inventory with expiry dates.
+✅ Recipe Recommendations – Get meal suggestions based on ingredients nearing expiry.
+✅ Calendar View – Visualize food expiry dates and plan meals accordingly.
+✅ User-Friendly Dashboard – Quick access to your inventory and recommended recipes.
 
-A few resources to get you started if this is your first Flutter project:
+Getting Started
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+Follow these steps to set up the project locally:
+	1.	Clone the repository:
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+git clone https://github.com/yourusername/minor_proj.git  
+cd minor_proj
+
+
+	2.	Install dependencies:
+
+flutter pub get  
+
+
+	3.	Run the app:
+
+flutter run  
+
+
+
+Contributing
+
+We welcome contributions! Feel free to submit issues or pull requests to improve the app.
+
+Let me know if you’d like any modifications! 🚀
