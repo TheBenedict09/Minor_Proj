@@ -37,7 +37,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
           // ),
           Positioned(
             bottom: 200,
-            left: -100,
+            left: -190,
             child: CircleBlurWidget(
               color: Colors.orange,
               diameter: 260,

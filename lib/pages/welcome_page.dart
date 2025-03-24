@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:minor_proj/components/circle_blur.dart';
+import 'package:minor_proj/pages/login_page.dart';
 
-class WelcomeScreen extends StatelessWidget {
-  const WelcomeScreen({super.key});
+class WelcomePage extends StatelessWidget {
+  const WelcomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +17,7 @@ class WelcomeScreen extends StatelessWidget {
             top: -60,
             left: -30,
             child: CircleBlurWidget(
-              color: Colors.orange,
+              color: Colors.cyanAccent.shade200,
               diameter: 270,
               blurSigma: 50, // Increase for more blur
             ),
@@ -25,7 +26,7 @@ class WelcomeScreen extends StatelessWidget {
             top: 250,
             right: -80,
             child: CircleBlurWidget(
-              color: Colors.purple,
+              color: Colors.lightGreenAccent.shade200,
               diameter: 220,
               blurSigma: 65,
             ),
@@ -40,10 +41,10 @@ class WelcomeScreen extends StatelessWidget {
             ),
           ),
           Positioned(
-            bottom: -30,
+            bottom: -100,
             right: -30,
             child: CircleBlurWidget(
-              color: Colors.cyanAccent.shade200,
+              color: Colors.orange,
               diameter: 220,
               blurSigma: 50,
             ),
@@ -91,7 +92,16 @@ class WelcomeScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return LoginPage();
+                        },
+                      ),
+                    );
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.black87,
                     foregroundColor: Colors.white,
