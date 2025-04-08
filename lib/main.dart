@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:minor_proj/pages/dashboard_page.dart';
+import 'package:minor_proj/pages/login_page.dart';
+import 'package:minor_proj/pages/recommended_recipes_page.dart';
+import 'package:minor_proj/pages/registration_page.dart';
+import 'package:minor_proj/pages/welcome_page.dart';
 import 'package:persistent_bottom_nav_bar_v2/persistent_bottom_nav_bar_v2.dart';
 
 void main() {
@@ -30,23 +34,23 @@ class MainScreen extends StatelessWidget {
           ),
         ),
         PersistentTabConfig(
-          screen: const Center(child: Text("Inventory")),
-          item: ItemConfig(
-            icon: const Icon(Icons.list),
-            title: "Inventory",
-          ),
-        ),
-        PersistentTabConfig(
-          screen: const Center(child: Text("Recipes")),
+          screen: const RecommendedRecipesPage(),
           item: ItemConfig(
             icon: const Icon(Icons.restaurant),
             title: "Recipes",
           ),
         ),
         PersistentTabConfig(
-          screen: const Center(child: Text("Profile")),
+          screen: const Center(child: Text("Calendar")),
           item: ItemConfig(
-            icon: const Icon(Icons.person),
+            icon: const Icon(Icons.calendar_month),
+            title: "Inventory",
+          ),
+        ),
+        PersistentTabConfig(
+          screen: const Center(child: Text("Settings")),
+          item: ItemConfig(
+            icon: const Icon(Icons.settings),
             title: "Profile",
           ),
         ),
