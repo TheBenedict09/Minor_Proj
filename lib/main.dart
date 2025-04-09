@@ -1,13 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:minor_proj/providers/RecipeProvider.dart';
+import 'package:provider/provider.dart';
+import 'package:minor_proj/pages/calendar_page.dart';
 import 'package:minor_proj/pages/dashboard_page.dart';
 import 'package:minor_proj/pages/login_page.dart';
-import 'package:minor_proj/pages/recommended_recipes_page.dart';
+import 'package:minor_proj/pages/Recipe%20Pages/recommended_recipes_page.dart';
 import 'package:minor_proj/pages/registration_page.dart';
 import 'package:minor_proj/pages/welcome_page.dart';
 import 'package:persistent_bottom_nav_bar_v2/persistent_bottom_nav_bar_v2.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => RecipeProvider()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -41,7 +51,11 @@ class MainScreen extends StatelessWidget {
           ),
         ),
         PersistentTabConfig(
-          screen: const Center(child: Text("Calendar")),
+          screen: Consumer<RecipeProvider>(
+            builder: (context, recipeProvider, child) {
+              return CalendarPage();
+            },
+          ),
           item: ItemConfig(
             icon: const Icon(Icons.calendar_month),
             title: "Inventory",

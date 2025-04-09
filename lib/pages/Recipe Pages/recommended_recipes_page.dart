@@ -1,9 +1,13 @@
+// ignore_for_file: deprecated_member_use
+
 import 'dart:convert';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:minor_proj/components/circle_blur.dart';
-import 'package:minor_proj/pages/recipe_page.dart';
+import 'package:minor_proj/pages/Recipe%20Pages/recipe_page.dart';
+import 'package:minor_proj/providers/RecipeProvider.dart';
+import 'package:provider/provider.dart';
 
 class RecommendedRecipesPage extends StatefulWidget {
   const RecommendedRecipesPage({super.key});
@@ -13,7 +17,6 @@ class RecommendedRecipesPage extends StatefulWidget {
 }
 
 class _RecommendedRecipesPageState extends State<RecommendedRecipesPage> {
-  List<Map<String, String>> recommendedRecipes = [];
   bool isLoading = true;
   bool hasError = false;
 
@@ -38,8 +41,9 @@ class _RecommendedRecipesPageState extends State<RecommendedRecipesPage> {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        setState(() {
-          recommendedRecipes = List.generate(data['recipes'].length, (index) {
+        final List<Map<String, String>> fetchedRecipes = List.generate(
+          data['recipes'].length,
+          (index) {
             final recipe = data['recipes'][index];
             return {
               "title": recipe['title'],
@@ -49,7 +53,14 @@ class _RecommendedRecipesPageState extends State<RecommendedRecipesPage> {
                   recipe['instructions'] ?? "Instructions not available.",
               "prepDate": "N/A",
             };
-          });
+          },
+        );
+
+        // Update provider with new recommended recipes
+        Provider.of<RecipeProvider>(context, listen: false)
+            .setRecommendedRecipes(fetchedRecipes);
+
+        setState(() {
           isLoading = false;
           hasError = false;
         });
@@ -66,6 +77,9 @@ class _RecommendedRecipesPageState extends State<RecommendedRecipesPage> {
 
   @override
   Widget build(BuildContext context) {
+    final recipeProvider = Provider.of<RecipeProvider>(context);
+    final recommendedRecipes = recipeProvider.recommendedRecipes;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF3F3F3),
       body: Stack(
@@ -97,10 +111,6 @@ class _RecommendedRecipesPageState extends State<RecommendedRecipesPage> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
                 width: double.infinity,
-                decoration: const BoxDecoration(
-                  borderRadius:
-                      BorderRadius.vertical(bottom: Radius.circular(20)),
-                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -164,7 +174,8 @@ class _RecommendedRecipesPageState extends State<RecommendedRecipesPage> {
                                     ),
                                   );
                                 },
-                                child: _buildRecipeCard(recipe),
+                                child: _buildRecipeCard(
+                                    recipe, recipeProvider, context),
                               );
                             },
                           ),
@@ -183,7 +194,8 @@ class _RecommendedRecipesPageState extends State<RecommendedRecipesPage> {
   }
 }
 
-Widget _buildRecipeCard(Map<String, String> recipe) {
+Widget _buildRecipeCard(Map<String, String> recipe,
+    RecipeProvider recipeProvider, BuildContext context) {
   return Container(
     decoration: BoxDecoration(
       borderRadius: BorderRadius.circular(20),
@@ -240,31 +252,25 @@ Widget _buildRecipeCard(Map<String, String> recipe) {
               Padding(
                 padding: const EdgeInsets.only(top: 10.0),
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Icon(
-                      Icons.timer,
-                      color: Colors.grey.shade600,
-                    ),
-                    Text(
-                      recipe["cookTime"]!,
-                      style:
-                          TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 6.0),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.calendar_today,
-                      color: Colors.grey.shade600,
-                    ),
-                    Text(
-                      "2/2/2025",
-                      style:
-                          TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                    Icon(Icons.timer, color: Colors.grey.shade600),
+                    Text(recipe["cookTime"]!,
+                        style: TextStyle(
+                            fontSize: 12, color: Colors.grey.shade600)),
+                    IconButton(
+                      icon: const Icon(Icons.add_circle, color: Colors.green),
+                      onPressed: () {
+                        DateTime today = DateTime.now();
+                        recipeProvider.addRecipeToCalendar(today, recipe);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                                "Added ${recipe["title"]} to today's schedule!"),
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
