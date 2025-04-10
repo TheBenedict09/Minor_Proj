@@ -16,8 +16,32 @@ class RecipeProvider extends ChangeNotifier {
     }
     _scheduledRecipes[onlyDate]!.add(recipe);
 
-    // 🔥 FIX: Remove from recommendations by title (not object reference)
+    // Remove from recommendations by title (not object reference)
     _recommendedRecipes.removeWhere((r) => r["title"] == recipe["title"]);
+
+    notifyListeners();
+  }
+
+  void removeRecipeFromCalendar(Map<String, String> recipe) {
+    DateTime? keyToRemove;
+
+    // Loop over each date and remove the recipe if found
+    _scheduledRecipes.forEach((date, recipesList) {
+      if (recipesList.any((r) => r["title"] == recipe["title"])) {
+        recipesList.removeWhere((r) => r["title"] == recipe["title"]);
+        if (recipesList.isEmpty) {
+          keyToRemove = date;
+        }
+      }
+    });
+    if (keyToRemove != null) {
+      _scheduledRecipes.remove(keyToRemove);
+    }
+
+    // Optionally, re-add the recipe to the recommended list if it isn’t already there.
+    if (!_recommendedRecipes.any((r) => r["title"] == recipe["title"])) {
+      _recommendedRecipes.add(recipe);
+    }
 
     notifyListeners();
   }

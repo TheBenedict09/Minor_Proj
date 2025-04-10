@@ -14,52 +14,91 @@ class RecipeDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF3F3F3),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          DateTime? lastDate;
-          if (recipe.containsKey('prepDate') && recipe['prepDate'] != null) {
-            try {
-              lastDate = DateTime.parse(recipe['prepDate']!);
-            } catch (e) {
-              lastDate = DateTime(2100);
+      // Use Consumer to conditionally build the FAB based on if the recipe is in the calendar
+      floatingActionButton: Consumer<RecipeProvider>(
+        builder: (context, provider, child) {
+          bool isInCalendar = false;
+          // Check each scheduled date to see if the recipe exists
+          provider.scheduledRecipes.forEach((date, recipes) {
+            if (recipes.any((r) => r["title"] == recipe["title"])) {
+              isInCalendar = true;
             }
-          } else {
-            lastDate = DateTime(2100);
-          }
+          });
 
-          DateTime? selectedDate = await showDatePicker(
-            context: context,
-            initialDate: DateTime.now(),
-            firstDate: DateTime.now(),
-            lastDate: lastDate,
-          );
-
-          if (selectedDate != null) {
-            DateTime onlyDate = DateTime(
-                selectedDate.year, selectedDate.month, selectedDate.day);
-
-            // Add to calendar and remove from recommended list
-            var provider = Provider.of<RecipeProvider>(context, listen: false);
-            provider.addRecipeToCalendar(onlyDate, recipe);
-            provider.removeRecommendedRecipe(
-                recipe); // New method to remove from recommendations
-
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Recipe added to Calendar!')),
+          // If the recipe is in the calendar, show the remove button.
+          if (isInCalendar) {
+            return FloatingActionButton.extended(
+              onPressed: () {
+                provider.removeRecipeFromCalendar(recipe);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                      content: Text('Recipe removed from Calendar!')),
+                );
+                Navigator.pop(context);
+              },
+              backgroundColor: Colors.red.shade100,
+              icon: const Icon(
+                Icons.delete,
+                color: Colors.red,
+              ),
+              label: const Text(
+                'Remove from Calendar',
+                style: TextStyle(color: Colors.red),
+              ),
             );
+          } else {
+            // If not scheduled yet, show the add button with a date picker.
+            return FloatingActionButton.extended(
+              onPressed: () async {
+                DateTime? lastDate;
+                if (recipe.containsKey('prepDate') &&
+                    recipe['prepDate'] != null) {
+                  try {
+                    lastDate = DateTime.parse(recipe['prepDate']!);
+                  } catch (e) {
+                    lastDate = DateTime(2100);
+                  }
+                } else {
+                  lastDate = DateTime(2100);
+                }
 
-            Navigator.pop(context); // Close detail page after adding
+                DateTime? selectedDate = await showDatePicker(
+                  context: context,
+                  initialDate: DateTime.now(),
+                  firstDate: DateTime.now(),
+                  lastDate: lastDate,
+                );
+
+                if (selectedDate != null) {
+                  DateTime onlyDate = DateTime(
+                    selectedDate.year,
+                    selectedDate.month,
+                    selectedDate.day,
+                  );
+
+                  // Add the recipe to the calendar and remove from the recommendations.
+                  provider.addRecipeToCalendar(onlyDate, recipe);
+                  provider.removeRecommendedRecipe(recipe);
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Recipe added to Calendar!')),
+                  );
+
+                  Navigator.pop(context); // Close the detail page after adding
+                }
+              },
+              backgroundColor: Colors.blue.shade100,
+              icon: const Icon(
+                Icons.calendar_today,
+                color: Colors.blue,
+              ),
+              label: const Text(
+                'Add to Calendar',
+                style: TextStyle(color: Colors.blue),
+              ),
+            );
           }
         },
-        backgroundColor: Colors.blue.shade100,
-        icon: const Icon(
-          Icons.calendar_today,
-          color: Colors.blue,
-        ),
-        label: const Text(
-          'Add to Calendar',
-          style: TextStyle(color: Colors.blue),
-        ),
       ),
       body: Stack(
         children: [
@@ -137,7 +176,7 @@ class RecipeDetailPage extends StatelessWidget {
                                   BoxShadow(
                                     color: Colors.black12,
                                     blurRadius: 4,
-                                    offset: Offset(0, 2),
+                                    offset: const Offset(0, 2),
                                   ),
                                 ],
                               ),
@@ -159,7 +198,7 @@ class RecipeDetailPage extends StatelessWidget {
                                   BoxShadow(
                                     color: Colors.black12,
                                     blurRadius: 4,
-                                    offset: Offset(0, 2),
+                                    offset: const Offset(0, 2),
                                   ),
                                 ],
                               ),
@@ -194,7 +233,9 @@ class RecipeDetailPage extends StatelessWidget {
                               recipe['instructions'] ??
                                   'No instructions provided.',
                               style: const TextStyle(
-                                  fontSize: 16, color: Colors.black87),
+                                fontSize: 16,
+                                color: Colors.black87,
+                              ),
                             ),
                           ],
                         ),

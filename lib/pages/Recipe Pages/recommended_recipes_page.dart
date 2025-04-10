@@ -254,10 +254,18 @@ Widget _buildRecipeCard(Map<String, String> recipe,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Icon(Icons.timer, color: Colors.grey.shade600),
-                    Text(recipe["cookTime"]!,
-                        style: TextStyle(
-                            fontSize: 12, color: Colors.grey.shade600)),
+                    Row(
+                      children: [
+                        Icon(Icons.timer, color: Colors.grey.shade600),
+                        Text(
+                          recipe["cookTime"]!,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
                     IconButton(
                       icon: const Icon(Icons.add_circle, color: Colors.green),
                       onPressed: () {

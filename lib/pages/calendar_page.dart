@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:minor_proj/pages/Recipe%20Pages/recipe_page.dart';
 import 'package:minor_proj/providers/RecipeProvider.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -88,7 +89,7 @@ class _CalendarPageState extends State<CalendarPage> {
                         calendarBuilders: CalendarBuilders(
                           todayBuilder: (context, day, focusedDay) {
                             return Container(
-                              margin: EdgeInsets.all(5),
+                              margin: const EdgeInsets.all(5),
                               alignment: Alignment.center,
                               decoration: const BoxDecoration(
                                 color: Colors.lightGreenAccent,
@@ -105,7 +106,7 @@ class _CalendarPageState extends State<CalendarPage> {
                           },
                           selectedBuilder: (context, day, focusedDay) {
                             return Container(
-                              margin: EdgeInsets.all(5),
+                              margin: const EdgeInsets.all(5),
                               alignment: Alignment.center,
                               decoration: const BoxDecoration(
                                 color: Colors.yellowAccent,
@@ -154,7 +155,7 @@ class _CalendarPageState extends State<CalendarPage> {
         ? const Center(child: Text("No recipes scheduled for today."))
         : ListView.builder(
             shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
+            physics: const NeverScrollableScrollPhysics(),
             padding: const EdgeInsets.symmetric(horizontal: 20),
             itemCount: recipes.length,
             itemBuilder: (context, index) => _buildRecipeTile(recipes[index]),
@@ -162,57 +163,68 @@ class _CalendarPageState extends State<CalendarPage> {
   }
 
   Widget _buildRecipeTile(Map<String, String> recipe) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      child: Stack(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(15),
-            child: ShaderMask(
-              shaderCallback: (bounds) {
-                return LinearGradient(
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                  colors: [Colors.transparent, Colors.white.withOpacity(1)],
-                ).createShader(bounds);
-              },
-              blendMode: BlendMode.dstIn,
-              child: Image.network(
-                recipe["image"]!,
-                height: 120,
-                width: double.infinity,
-                fit: BoxFit.cover,
+    return InkWell(
+      onTap: () {
+        // Navigate to RecipeDetailPage when the tile is tapped.
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => RecipeDetailPage(recipe: recipe),
+          ),
+        );
+      },
+      child: Card(
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        child: Stack(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(15),
+              child: ShaderMask(
+                shaderCallback: (bounds) {
+                  return LinearGradient(
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    colors: [Colors.transparent, Colors.white.withOpacity(1)],
+                  ).createShader(bounds);
+                },
+                blendMode: BlendMode.dstIn,
+                child: Image.network(
+                  recipe["image"]!,
+                  height: 120,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
-          ),
-          Positioned(
-            left: 16,
-            top: 16,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  recipe["title"]!,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                    color: Colors.black,
+            Positioned(
+              left: 16,
+              top: 16,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    recipe["title"]!,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: Colors.black,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 2,
                   ),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 2,
-                ),
-                Text(
-                  "Cook Time: ${recipe["cookTime"]}",
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade700,
+                  Text(
+                    "Cook Time: ${recipe["cookTime"]}",
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey.shade700,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
