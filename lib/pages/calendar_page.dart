@@ -21,6 +21,15 @@ class _CalendarPageState extends State<CalendarPage> {
       backgroundColor: const Color(0xFFF3F3F3),
       body: Stack(
         children: [
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFFFEF5E7), Color(0xFF85C1E9)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+          ),
           Positioned(
             top: -220,
             left: -80,
@@ -30,15 +39,15 @@ class _CalendarPageState extends State<CalendarPage> {
               blurSigma: 50,
             ),
           ),
-          Positioned(
-            bottom: -180,
-            right: -150,
-            child: CircleBlurWidget(
-              color: Colors.yellowAccent.shade100,
-              diameter: 350,
-              blurSigma: 50,
-            ),
-          ),
+          // Positioned(
+          //   bottom: -180,
+          //   right: -150,
+          //   child: CircleBlurWidget(
+          //     color: Colors.yellowAccent.shade100,
+          //     diameter: 350,
+          //     blurSigma: 50,
+          //   ),
+          // ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:minor_proj/pages/Recipe%20Pages/recommended_recipes_page.dart';
 import 'package:minor_proj/pages/calendar_page.dart';
-import 'package:minor_proj/pages/dashboard_page.dart';
+import 'package:minor_proj/pages/Dashboard%20Pages/dashboard_page.dart';
 import 'package:minor_proj/providers/RecipeProvider.dart';
 import 'package:persistent_bottom_nav_bar_v2/persistent_bottom_nav_bar_v2.dart';
 import 'package:provider/provider.dart';

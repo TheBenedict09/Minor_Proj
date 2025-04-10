@@ -85,8 +85,17 @@ class _RecommendedRecipesPageState extends State<RecommendedRecipesPage> {
       body: Stack(
         children: [
           // Background Decorations
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFFFEF5E7), Color(0xFF85C1E9)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+          ),
           Positioned(
-            top: -110,
+            top: -190,
             left: -80,
             child: CircleBlurWidget(
               color: Colors.orangeAccent,
