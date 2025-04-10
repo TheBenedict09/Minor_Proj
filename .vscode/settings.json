@@ -1,4 +1,5 @@
 {
     "java.compile.nullAnalysis.mode": "automatic",
-    "cmake.sourceDirectory": "C:/Users/Ayush Benedict Singh/CP/Flutter_Projects/On-Going/minor_proj/linux"
+    "cmake.sourceDirectory": "C:/Users/Ayush Benedict Singh/CP/Flutter_Projects/On-Going/minor_proj/linux",
+    "java.configuration.updateBuildConfiguration": "automatic"
 }

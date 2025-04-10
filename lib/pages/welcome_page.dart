@@ -1,14 +1,47 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:minor_proj/components/circle_blur.dart';
 import 'package:minor_proj/pages/login_page.dart';
+import 'package:minor_proj/components/main_screen.dart';
 
-class WelcomePage extends StatelessWidget {
+class WelcomePage extends StatefulWidget {
   const WelcomePage({super.key});
+
+  @override
+  _WelcomePageState createState() => _WelcomePageState();
+}
+
+class _WelcomePageState extends State<WelcomePage> {
+  @override
+  void initState() {
+    super.initState();
+    _checkLoginStatus();
+  }
+
+  void _checkLoginStatus() async {
+    await Future.delayed(
+        const Duration(seconds: 4)); // Show welcome screen for 2 seconds
+
+    FirebaseAuth.instance.authStateChanges().listen((User? user) {
+      if (user != null) {
+        // ✅ User is logged in, go to MainScreen
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const MainScreen()),
+        );
+      } else {
+        // ❌ User is NOT logged in, go to LoginPage
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginPage()),
+        );
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Light gray background
       backgroundColor: const Color(0xFFF3F3F3),
       body: Stack(
         children: [
@@ -19,7 +52,7 @@ class WelcomePage extends StatelessWidget {
             child: CircleBlurWidget(
               color: Colors.cyanAccent.shade200,
               diameter: 270,
-              blurSigma: 50, // Increase for more blur
+              blurSigma: 50,
             ),
           ),
           Positioned(
@@ -69,7 +102,7 @@ class WelcomePage extends StatelessWidget {
                 const SizedBox(height: 16),
                 RichText(
                   textAlign: TextAlign.center,
-                  text: TextSpan(
+                  text: const TextSpan(
                     children: [
                       TextSpan(
                         text: "Plan your plate\n",
@@ -96,9 +129,7 @@ class WelcomePage extends StatelessWidget {
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                        builder: (context) {
-                          return LoginPage();
-                        },
+                        builder: (context) => const LoginPage(),
                       ),
                     );
                   },

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:minor_proj/components/circle_blur.dart';
+import 'package:minor_proj/components/main_screen.dart';
 import 'package:minor_proj/pages/login_page.dart';
 
 class RegistrationPage extends StatefulWidget {
@@ -10,31 +12,61 @@ class RegistrationPage extends StatefulWidget {
 }
 
 class _RegistrationPageState extends State<RegistrationPage> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading = false;
+  String? _errorMessage;
+
+  Future<void> _registerUser() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const MainScreen()),
+      );
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        _errorMessage = e.message;
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F3F3),
       body: Stack(
         children: [
-          // Blurred circles
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFFFEF5E7), Color(0xFF85C1E9)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+          ),
           Positioned(
             top: -60,
             left: -30,
             child: CircleBlurWidget(
               color: Colors.cyanAccent,
               diameter: 270,
-              blurSigma: 50, // Increase for more blur
+              blurSigma: 50,
             ),
           ),
-          // Positioned(
-          //   top: 250,
-          //   right: -80,
-          //   child: CircleBlurWidget(
-          //     color: Colors.purple,
-          //     diameter: 220,
-          //     blurSigma: 65,
-          //   ),
-          // ),
           Positioned(
             bottom: 200,
             left: -190,
@@ -44,141 +76,122 @@ class _RegistrationPageState extends State<RegistrationPage> {
               blurSigma: 50,
             ),
           ),
-          Positioned(
-            bottom: -30,
-            right: -30,
-            child: CircleBlurWidget(
-              color: Colors.lightGreenAccent.shade200,
-              diameter: 220,
-              blurSigma: 50,
-            ),
-          ),
-
-          // Center content
           Center(
             child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 30),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 79.0),
-                    child: Text(
-                      'Sign Up',
-                      style: TextStyle(
-                        fontSize: MediaQuery.sizeOf(context).width * 0.18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
+                  Text(
+                    'Sign Up',
+                    style: TextStyle(
+                      fontSize: MediaQuery.sizeOf(context).width * 0.13,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
                     ),
                   ),
-                  SizedBox(
-                    height: MediaQuery.sizeOf(context).height * 0.22,
-                  ),
-                  const SizedBox(height: 16),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 28.0, right: 28.0),
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: "Username",
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(25),
-                          borderSide: BorderSide(color: Colors.black, width: 2),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(25),
-                          borderSide: BorderSide(color: Colors.grey, width: 1),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(25),
-                          borderSide: BorderSide(color: Colors.red, width: 2),
-                        ),
-                        focusedErrorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(25),
-                          borderSide: BorderSide(color: Colors.red, width: 2),
-                        ),
-                      ),
+                  const SizedBox(height: 30),
+                  TextField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecoration(
+                      hintText: "Email",
+                      prefixIcon:
+                          Icon(Icons.email_outlined, color: Colors.black54),
+                      focusedBorder: _borderStyle(Colors.black),
+                      enabledBorder: _borderStyle(Colors.grey),
                     ),
                   ),
-                  SizedBox(
-                    height: MediaQuery.sizeOf(context).height * 0.02,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 28.0, right: 28.0),
-                    child: TextField(
-                      obscureText: true,
-                      decoration: InputDecoration(
-                        hintText: "Password",
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(25),
-                          borderSide: BorderSide(color: Colors.black, width: 2),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(25),
-                          borderSide: BorderSide(color: Colors.grey, width: 1),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(25),
-                          borderSide: BorderSide(color: Colors.red, width: 2),
-                        ),
-                        focusedErrorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(25),
-                          borderSide: BorderSide(color: Colors.red, width: 2),
-                        ),
-                      ),
+                  const SizedBox(height: 15),
+                  TextField(
+                    controller: _passwordController,
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      hintText: "Password",
+                      prefixIcon:
+                          Icon(Icons.lock_outline, color: Colors.black54),
+                      focusedBorder: _borderStyle(Colors.black),
+                      enabledBorder: _borderStyle(Colors.grey),
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  if (_errorMessage != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: Text(
+                        _errorMessage!,
+                        style: const TextStyle(color: Colors.red, fontSize: 14),
+                      ),
+                    ),
+                  const SizedBox(height: 20),
                   ElevatedButton(
-                    onPressed: () {},
+                    onPressed: _isLoading ? null : _registerUser,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.black87,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 36, vertical: 14),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(25),
                       ),
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 14.0, right: 14.0),
-                      child: Icon(
-                        size: 25,
-                        color: Colors.white,
-                        Icons.keyboard_double_arrow_right_rounded,
-                      ),
-                    ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Sign Up',
+                                style: TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                              SizedBox(width: 10),
+                              Icon(Icons.arrow_forward_rounded),
+                            ],
+                          ),
                   ),
-                  // SizedBox(
-                  //   height: MediaQuery.sizeOf(context).height * 0.2,
-                  // ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 120.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Text("Already a User?"),
-                        TextButton(
-                            onPressed: () {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) {
-                                    return LoginPage();
-                                  },
-                                ),
-                              );
-                            },
-                            child: Text("Log In"))
-                      ],
-                    ),
-                  )
+                  const SizedBox(height: 40),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text("Already a User?",
+                          style: TextStyle(fontSize: 16)),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const LoginPage(),
+                            ),
+                          );
+                        },
+                        child: const Text(
+                          "Log In",
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                      )
+                    ],
+                  ),
                 ],
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  OutlineInputBorder _borderStyle(Color color) {
+    return OutlineInputBorder(
+      borderRadius: BorderRadius.circular(25),
+      borderSide: BorderSide(color: color, width: 1.5),
     );
   }
 }

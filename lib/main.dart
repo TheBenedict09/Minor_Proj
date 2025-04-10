@@ -1,23 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:minor_proj/providers/RecipeProvider.dart';
-import 'package:provider/provider.dart';
-import 'package:minor_proj/pages/calendar_page.dart';
-import 'package:minor_proj/pages/dashboard_page.dart';
-import 'package:minor_proj/pages/login_page.dart';
-import 'package:minor_proj/pages/Recipe%20Pages/recommended_recipes_page.dart';
-import 'package:minor_proj/pages/registration_page.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:minor_proj/pages/welcome_page.dart';
-import 'package:persistent_bottom_nav_bar_v2/persistent_bottom_nav_bar_v2.dart';
+import 'package:minor_proj/components/main_screen.dart';
 
-void main() {
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (context) => RecipeProvider()),
-      ],
-      child: const MyApp(),
-    ),
-  );
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -27,61 +17,23 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const MainScreen(),
+      home: AuthCheck(), // Dynamically decide the first screen
     );
   }
 }
 
-class MainScreen extends StatelessWidget {
-  const MainScreen({super.key});
-
-  List<PersistentTabConfig> _tabs() => [
-        PersistentTabConfig(
-          screen: const DashboardPage(),
-          item: ItemConfig(
-            icon: const Icon(Icons.home),
-            title: "Home",
-          ),
-        ),
-        PersistentTabConfig(
-          screen: const RecommendedRecipesPage(),
-          item: ItemConfig(
-            icon: const Icon(Icons.restaurant),
-            title: "Recipes",
-          ),
-        ),
-        PersistentTabConfig(
-          screen: Consumer<RecipeProvider>(
-            builder: (context, recipeProvider, child) {
-              return CalendarPage();
-            },
-          ),
-          item: ItemConfig(
-            icon: const Icon(Icons.calendar_month),
-            title: "Inventory",
-          ),
-        ),
-        PersistentTabConfig(
-          screen: const Center(child: Text("Settings")),
-          item: ItemConfig(
-            icon: const Icon(Icons.settings),
-            title: "Profile",
-          ),
-        ),
-      ];
-
+// ✅ Decides which screen to show first
+class AuthCheck extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: PersistentTabView(
-        backgroundColor: Colors.transparent,
-        tabs: _tabs(),
-        navBarBuilder: (navBarConfig) => Style9BottomNavBar(
-          navBarConfig: navBarConfig,
-          navBarDecoration: const NavBarDecoration(color: Colors.transparent),
-        ),
-        navBarOverlap: NavBarOverlap.full(),
-      ),
-    );
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      // ✅ User is already logged in → Go to MainScreen
+      return const MainScreen();
+    } else {
+      // ❌ User NOT logged in → Show WelcomePage
+      return const WelcomePage();
+    }
   }
 }
