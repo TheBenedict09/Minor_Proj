@@ -2,8 +2,9 @@
 
 import 'dart:convert';
 import 'dart:ui';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:minor_proj/components/circle_blur.dart';
 import 'package:minor_proj/pages/Recipe%20Pages/recipe_page.dart';
 import 'package:minor_proj/providers/RecipeProvider.dart';
@@ -27,51 +28,49 @@ class _RecommendedRecipesPageState extends State<RecommendedRecipesPage> {
   }
 
   Future<void> fetchRecommendedRecipes() async {
-    const String apiKey = "849300edee8446acbb831e6c395a7c5e";
-    const String apiUrl =
-        "https://api.spoonacular.com/recipes/random?number=10&apiKey=$apiKey";
-
     try {
-      final response = await http.get(Uri.parse(apiUrl)).timeout(
-        const Duration(seconds: 10),
-        onTimeout: () {
-          throw Exception("Request Timeout");
-        },
-      );
+      // Retrieve all documents from the "recommended_recipes" collection.
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection("recommended_recipes")
+          .get();
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        final List<Map<String, String>> fetchedRecipes = List.generate(
-          data['recipes'].length,
-          (index) {
-            final recipe = data['recipes'][index];
-            return {
-              "title": recipe['title'],
-              "image": recipe['image'],
-              "cookTime": "${recipe['readyInMinutes']} min",
-              "instructions":
-                  recipe['instructions'] ?? "Instructions not available.",
-              "prepDate": "N/A",
-            };
-          },
-        );
+      // Build a List<Map<String, String>> from all documents.
+      final List<Map<String, String>> fetchedRecipes =
+          querySnapshot.docs.map((doc) {
+        final recipe = doc.data() as Map<String, dynamic>;
+        // IMPORTANT: Map keys to what RecipeDetailPage expects.
+        return {
+          "name": recipe["name"]?.toString() ?? "Untitled Recipe",
+          // Keep "title" for the grid card UI if needed.
+          "title": recipe["name"]?.toString() ?? "Untitled Recipe",
+          "image": recipe["image"]?.toString() ?? "",
+          "cook_time_minutes": recipe["cook_time_minutes"]?.toString() ?? "N/A",
+          "instructions": recipe["instructions"]?.toString() ??
+              "Instructions not available.",
+          "cook_by_date": recipe["cook_by_date"]?.toString() ?? "N/A",
+          // Pass the ingredients list directly (do not encode)
+          // (Assuming recipe["ingredients_required"] is already a List.)
+          // When passing through Provider you may need to handle types; here we convert to String as needed for
+          // RecipeDetailPage but keep the original type by using toString only for non-list items.
+          "ingredients_required": jsonEncode(recipe["ingredients_required"]),
+          "portion_size": recipe["portion_size"]?.toString() ?? "",
+          "score": recipe["score"]?.toString() ?? "",
+        };
+      }).toList();
 
-        // Update provider with new recommended recipes
-        Provider.of<RecipeProvider>(context, listen: false)
-            .setRecommendedRecipes(fetchedRecipes);
+      Provider.of<RecipeProvider>(context, listen: false)
+          .setRecommendedRecipes(fetchedRecipes);
 
-        setState(() {
-          isLoading = false;
-          hasError = false;
-        });
-      } else {
-        throw Exception("Failed to load recipes");
-      }
+      setState(() {
+        isLoading = false;
+        hasError = false;
+      });
     } catch (e) {
       setState(() {
         isLoading = false;
         hasError = true;
       });
+      debugPrint("Error fetching recommended recipes: $e");
     }
   }
 
@@ -100,7 +99,7 @@ class _RecommendedRecipesPageState extends State<RecommendedRecipesPage> {
             child: CircleBlurWidget(
               color: Colors.orangeAccent,
               diameter: 370,
-              blurSigma: 50,
+              blurSigma: 40,
             ),
           ),
           Positioned(
@@ -109,7 +108,7 @@ class _RecommendedRecipesPageState extends State<RecommendedRecipesPage> {
             child: CircleBlurWidget(
               color: Colors.cyanAccent,
               diameter: 350,
-              blurSigma: 50,
+              blurSigma: 120,
             ),
           ),
           Column(
@@ -126,15 +125,22 @@ class _RecommendedRecipesPageState extends State<RecommendedRecipesPage> {
                     Text(
                       "Recommended \nRecipes",
                       style: TextStyle(
-                        fontSize: MediaQuery.sizeOf(context).width * 0.07,
+                        fontSize: MediaQuery.of(context).size.width * 0.07,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     IconButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        setState(
+                          () {
+                            isLoading = true;
+                          },
+                        );
+                        fetchRecommendedRecipes();
+                      },
                       icon: Icon(
-                        size: MediaQuery.sizeOf(context).width * 0.07,
                         Icons.restaurant_menu,
+                        size: MediaQuery.of(context).size.width * 0.07,
                       ),
                     )
                   ],
@@ -169,7 +175,7 @@ class _RecommendedRecipesPageState extends State<RecommendedRecipesPage> {
                               crossAxisCount: 2,
                               crossAxisSpacing: 16,
                               mainAxisSpacing: 16,
-                              childAspectRatio: 0.69,
+                              childAspectRatio: 0.719,
                             ),
                             itemBuilder: (context, index) {
                               final recipe = recommendedRecipes[index];
@@ -192,7 +198,7 @@ class _RecommendedRecipesPageState extends State<RecommendedRecipesPage> {
               Expanded(
                 flex: 1,
                 child: SizedBox(
-                  height: MediaQuery.sizeOf(context).height * 0.08,
+                  height: MediaQuery.of(context).size.height * 0.08,
                 ),
               ),
             ],
@@ -267,11 +273,9 @@ Widget _buildRecipeCard(Map<String, String> recipe,
                       children: [
                         Icon(Icons.timer, color: Colors.grey.shade600),
                         Text(
-                          recipe["cookTime"]!,
+                          recipe["cook_time_minutes"]! + " min",
                           style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade600,
-                          ),
+                              fontSize: 12, color: Colors.grey.shade600),
                         ),
                       ],
                     ),

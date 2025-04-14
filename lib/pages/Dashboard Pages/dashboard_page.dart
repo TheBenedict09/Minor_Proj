@@ -1,11 +1,9 @@
 import 'dart:ui';
-import 'dart:convert'; // for JSON decoding
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:minor_proj/components/circle_blur.dart';
-import 'package:http/http.dart' as http;
 
-import 'functions.dart'; // for API requests
+import 'functions.dart'; // for API requests, e.g. getIngredientImage
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -18,11 +16,16 @@ class _DashboardPageState extends State<DashboardPage> {
   List<Map<String, String>> inventoryItems = [];
   bool isLoading = true;
   bool hasError = false;
-  // Firestore instance for convenience.
+
+  // Firestore instance.
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Listener subscription for real-time updates.
   late final Stream<QuerySnapshot> _inventoryStream;
+
+  // Unit selection options.
+  final List<String> _unitOptions = ['pcs', 'g', 'kg', 'lb'];
+  String _selectedUnit = 'pcs';
 
   @override
   void initState() {
@@ -31,16 +34,27 @@ class _DashboardPageState extends State<DashboardPage> {
     _listenToInventory();
   }
 
+  // This helper returns a combined quantity string.
+  // For grams ("g") it returns "100g" (without space) while for other units it returns "100 kg" etc.
+  String _formatQuantity(String input, String unit) {
+    final trimmed = input.trim();
+    if (trimmed.isEmpty) return "0";
+    if (unit == "g") return "$trimmed$unit"; // no space for grams
+    return "$trimmed $unit"; // include a space for other units
+  }
+
   void _listenToInventory() {
     _inventoryStream.listen((QuerySnapshot snapshot) {
       try {
+        // Use field names "purchase_date" and "expiry_date" as stored.
         List<Map<String, String>> items = snapshot.docs.map((doc) {
           final data = doc.data() as Map<String, dynamic>;
           return {
             "id": doc.id,
             "name": data["name"]?.toString() ?? "Unnamed",
-            "purchase": data["purchase"]?.toString() ?? "Unknown",
-            "expiry": data["expiry"]?.toString() ?? "Unknown",
+            "purchase": data["purchase_date"]?.toString() ?? "Unknown",
+            "expiry": data["expiry_date"]?.toString() ?? "Unknown",
+            "quantity": data["quantity"]?.toString() ?? "0",
           };
         }).toList();
         setState(() {
@@ -62,46 +76,27 @@ class _DashboardPageState extends State<DashboardPage> {
     });
   }
 
-  // Date picker helper.
+  // Date picker helper that formats the date as "yyyy-mm-dd".
   Future<void> _selectDate(
       BuildContext context, TextEditingController controller) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(), // default value.
+      initialDate: DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );
     if (picked != null) {
-      // Format the date as e.g., "10 Feb"
       final formattedDate =
-          "${picked.day.toString().padLeft(2, '0')} ${_monthName(picked.month)}";
+          "${picked.year.toString()}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
       controller.text = formattedDate;
     }
-  }
-
-  String _monthName(int month) {
-    const List<String> months = [
-      '',
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec'
-    ];
-    return months[month];
   }
 
   void _showAddItemDialog() {
     final TextEditingController nameController = TextEditingController();
     final TextEditingController purchaseController = TextEditingController();
     final TextEditingController expiryController = TextEditingController();
+    final TextEditingController quantityController = TextEditingController();
 
     showGeneralDialog(
       context: context,
@@ -109,7 +104,6 @@ class _DashboardPageState extends State<DashboardPage> {
       barrierDismissible: true,
       transitionDuration: const Duration(milliseconds: 300),
       pageBuilder: (context, anim1, anim2) {
-        // Declare the variable outside of the builder to preserve state.
         bool isAdding = false;
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setState) {
@@ -154,7 +148,7 @@ class _DashboardPageState extends State<DashboardPage> {
                           ),
                         ),
                         const SizedBox(height: 15),
-                        // Purchase Date field with Date Picker.
+                        // Purchase date with date picker.
                         TextField(
                           controller: purchaseController,
                           readOnly: true,
@@ -166,7 +160,7 @@ class _DashboardPageState extends State<DashboardPage> {
                           onTap: () => _selectDate(context, purchaseController),
                         ),
                         const SizedBox(height: 15),
-                        // Expiry Date field with Date Picker.
+                        // Expiry date with date picker.
                         TextField(
                           controller: expiryController,
                           readOnly: true,
@@ -177,18 +171,53 @@ class _DashboardPageState extends State<DashboardPage> {
                           ),
                           onTap: () => _selectDate(context, expiryController),
                         ),
+                        const SizedBox(height: 15),
+                        // Row for quantity and unit dropdown.
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: quantityController,
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                        decimal: true),
+                                decoration: const InputDecoration(
+                                  labelText: "Quantity",
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            DropdownButton<String>(
+                              value: _selectedUnit,
+                              items: _unitOptions.map((String unit) {
+                                return DropdownMenuItem<String>(
+                                  value: unit,
+                                  child: Text(
+                                    unit,
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                );
+                              }).toList(),
+                              onChanged: (String? newUnit) {
+                                if (newUnit != null) {
+                                  setState(() {
+                                    _selectedUnit = newUnit;
+                                  });
+                                }
+                              },
+                            ),
+                          ],
+                        ),
                         const SizedBox(height: 20),
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.lightGreenAccent,
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 40,
-                              vertical: 15,
-                            ),
+                                horizontal: 40, vertical: 15),
                             textStyle: const TextStyle(fontSize: 16),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
+                                borderRadius: BorderRadius.circular(12)),
                           ),
                           onPressed: isAdding
                               ? null
@@ -198,16 +227,23 @@ class _DashboardPageState extends State<DashboardPage> {
                                     setState(() {
                                       isAdding = true;
                                     });
-                                    // Save the new inventory item (name and dates only).
+                                    // Use the helper to get the formatted quantity string.
+                                    final quantityText = _formatQuantity(
+                                        quantityController.text, _selectedUnit);
+                                    // Save the new inventory item into Firestore.
                                     await _firestore
                                         .collection('ingredients')
                                         .add({
                                       "name": nameController.text,
-                                      "purchase":
+                                      "quantity": quantityText,
+                                      "purchase_date":
                                           purchaseController.text.isNotEmpty
                                               ? purchaseController.text
                                               : "Unknown",
-                                      "expiry": expiryController.text,
+                                      "expiry_date":
+                                          expiryController.text.isNotEmpty
+                                              ? expiryController.text
+                                              : "Unknown",
                                     });
                                     setState(() {
                                       isAdding = false;
@@ -221,9 +257,8 @@ class _DashboardPageState extends State<DashboardPage> {
                                   width: 24,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    valueColor:
-                                        const AlwaysStoppedAnimation<Color>(
-                                            Colors.white),
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white),
                                   ),
                                 )
                               : const Text("Add Item"),
@@ -312,9 +347,20 @@ class _DashboardPageState extends State<DashboardPage> {
                     "Expires: ${item["expiry"]}",
                     style: const TextStyle(fontSize: 16, color: Colors.red),
                   ),
+                  const SizedBox(height: 5),
+                  Text(
+                    "Quantity: ${item["quantity"]}",
+                    style: const TextStyle(fontSize: 16),
+                  ),
                   const SizedBox(height: 10),
                   ElevatedButton(
                     onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.teal,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
                     child: const Text("Close"),
                   )
                 ],
@@ -361,7 +407,7 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
             ),
           ),
-          Positioned(
+          const Positioned(
             top: -160,
             right: -70,
             child: CircleBlurWidget(
@@ -370,7 +416,7 @@ class _DashboardPageState extends State<DashboardPage> {
               blurSigma: 50,
             ),
           ),
-          Positioned(
+          const Positioned(
             bottom: -100,
             left: -30,
             child: CircleBlurWidget(
@@ -472,7 +518,7 @@ class _DashboardPageState extends State<DashboardPage> {
                                         gridDelegate:
                                             SliverGridDelegateWithFixedCrossAxisCount(
                                           crossAxisCount: 3,
-                                          crossAxisSpacing: 16,
+                                          crossAxisSpacing: 13,
                                           mainAxisSpacing: 16,
                                           childAspectRatio:
                                               MediaQuery.sizeOf(context)
@@ -507,7 +553,7 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 }
 
-/// _buildInventoryItem now uses a FutureBuilder to fetch the image based on the item name.
+/// _buildInventoryItem now uses a FutureBuilder to fetch and display the ingredient image.
 Widget _buildInventoryItem(Map<String, String> item) {
   return Container(
     decoration: BoxDecoration(

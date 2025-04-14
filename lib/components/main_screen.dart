@@ -36,7 +36,11 @@ class MainScreen extends StatelessWidget {
           ),
         ),
         PersistentTabConfig(
-          screen: const Center(child: Text("Settings")),
+          screen: const Center(
+              child: Text(
+            "Under Construction",
+            style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+          )),
           item: ItemConfig(
             icon: const Icon(Icons.settings),
             title: "Profile",
