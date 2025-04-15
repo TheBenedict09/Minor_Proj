@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:minor_proj/pages/login_page.dart';
 import 'package:provider/provider.dart';
 import 'package:minor_proj/pages/welcome_page.dart';
 import 'package:minor_proj/components/main_screen.dart';
@@ -36,13 +37,20 @@ class AuthCheck extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      // User is logged in → Go to MainScreen.
-      return const MainScreen();
-    } else {
-      // User not logged in → Show WelcomePage.
-      return const WelcomePage();
-    }
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasData) {
+          // User is signed in → display the MainScreen (which includes the navbar).
+          return const MainScreen();
+        } else {
+          // User is signed out → display the LoginPage.
+          return const LoginPage();
+        }
+      },
+    );
   }
 }

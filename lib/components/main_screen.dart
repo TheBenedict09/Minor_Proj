@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:minor_proj/pages/Recipe%20Pages/recommended_recipes_page.dart';
 import 'package:minor_proj/pages/calendar_page.dart';
 import 'package:minor_proj/pages/Dashboard%20Pages/dashboard_page.dart';
+import 'package:minor_proj/pages/profile_page.dart';
 import 'package:minor_proj/providers/RecipeProvider.dart';
 import 'package:persistent_bottom_nav_bar_v2/persistent_bottom_nav_bar_v2.dart';
 import 'package:provider/provider.dart';
@@ -36,11 +37,7 @@ class MainScreen extends StatelessWidget {
           ),
         ),
         PersistentTabConfig(
-          screen: const Center(
-              child: Text(
-            "Under Construction",
-            style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
-          )),
+          screen: const ProfilePage(),
           item: ItemConfig(
             icon: const Icon(Icons.settings),
             title: "Profile",

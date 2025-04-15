@@ -17,6 +17,9 @@ class _DashboardPageState extends State<DashboardPage> {
   bool isLoading = true;
   bool hasError = false;
 
+  // Cache for image URLs. This avoids re-fetching on every widget rebuild.
+  final Map<String, String> _imageCache = {};
+
   // Firestore instance.
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
@@ -35,18 +38,27 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   // This helper returns a combined quantity string.
-  // For grams ("g") it returns "100g" (without space) while for other units it returns "100 kg" etc.
   String _formatQuantity(String input, String unit) {
     final trimmed = input.trim();
     if (trimmed.isEmpty) return "0";
-    if (unit == "g") return "$trimmed$unit"; // no space for grams
-    return "$trimmed $unit"; // include a space for other units
+    if (unit == "g") return "$trimmed$unit";
+    return "$trimmed $unit";
+  }
+
+  // Helper to use cached images. It checks if the image for a given name is cached.
+  // If not, it fetches it using the original getIngredientImage and saves it.
+  Future<String> _getCachedIngredientImage(String name) async {
+    if (_imageCache.containsKey(name)) {
+      return _imageCache[name]!;
+    }
+    final url = await getIngredientImage(name);
+    _imageCache[name] = url;
+    return url;
   }
 
   void _listenToInventory() {
     _inventoryStream.listen((QuerySnapshot snapshot) {
       try {
-        // Use field names "purchase_date" and "expiry_date" as stored.
         List<Map<String, String>> items = snapshot.docs.map((doc) {
           final data = doc.data() as Map<String, dynamic>;
           return {
@@ -76,7 +88,6 @@ class _DashboardPageState extends State<DashboardPage> {
     });
   }
 
-  // Date picker helper that formats the date as "yyyy-mm-dd".
   Future<void> _selectDate(
       BuildContext context, TextEditingController controller) async {
     final DateTime? picked = await showDatePicker(
@@ -148,7 +159,6 @@ class _DashboardPageState extends State<DashboardPage> {
                           ),
                         ),
                         const SizedBox(height: 15),
-                        // Purchase date with date picker.
                         TextField(
                           controller: purchaseController,
                           readOnly: true,
@@ -160,7 +170,6 @@ class _DashboardPageState extends State<DashboardPage> {
                           onTap: () => _selectDate(context, purchaseController),
                         ),
                         const SizedBox(height: 15),
-                        // Expiry date with date picker.
                         TextField(
                           controller: expiryController,
                           readOnly: true,
@@ -172,7 +181,6 @@ class _DashboardPageState extends State<DashboardPage> {
                           onTap: () => _selectDate(context, expiryController),
                         ),
                         const SizedBox(height: 15),
-                        // Row for quantity and unit dropdown.
                         Row(
                           children: [
                             Expanded(
@@ -227,10 +235,8 @@ class _DashboardPageState extends State<DashboardPage> {
                                     setState(() {
                                       isAdding = true;
                                     });
-                                    // Use the helper to get the formatted quantity string.
                                     final quantityText = _formatQuantity(
                                         quantityController.text, _selectedUnit);
-                                    // Save the new inventory item into Firestore.
                                     await _firestore
                                         .collection('ingredients')
                                         .add({
@@ -305,7 +311,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   FutureBuilder<String>(
-                    future: getIngredientImage(item["name"]!),
+                    future: _getCachedIngredientImage(item["name"]!),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return SizedBox(
@@ -470,9 +476,7 @@ class _DashboardPageState extends State<DashboardPage> {
                                 const SizedBox(height: 10),
                                 const Text("Failed to load data. Try again."),
                                 ElevatedButton(
-                                  onPressed: () {
-                                    _listenToInventory();
-                                  },
+                                  onPressed: _listenToInventory,
                                   child: const Text("Retry"),
                                 ),
                               ],
@@ -529,8 +533,191 @@ class _DashboardPageState extends State<DashboardPage> {
                                           return GestureDetector(
                                             onTap: () => _showInventoryDetails(
                                                 inventoryItems[index]),
-                                            child: _buildInventoryItem(
-                                                inventoryItems[index]),
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                                gradient: LinearGradient(
+                                                  colors: [
+                                                    Colors.white
+                                                        .withOpacity(0.3),
+                                                    Colors.white
+                                                        .withOpacity(0.1)
+                                                  ],
+                                                  begin: Alignment.topLeft,
+                                                  end: Alignment.bottomRight,
+                                                ),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.black
+                                                        .withOpacity(0.1),
+                                                    blurRadius: 8,
+                                                    spreadRadius: 3,
+                                                    offset: const Offset(2, 4),
+                                                  ),
+                                                ],
+                                              ),
+                                              child: ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                                child: BackdropFilter(
+                                                  filter: ImageFilter.blur(
+                                                      sigmaX: 10, sigmaY: 10),
+                                                  child: Container(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            12),
+                                                    decoration: BoxDecoration(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              20),
+                                                      border: Border.all(
+                                                        color: Colors.white
+                                                            .withOpacity(0.2),
+                                                      ),
+                                                    ),
+                                                    child: Column(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
+                                                      children: [
+                                                        Container(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(8),
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            shape:
+                                                                BoxShape.circle,
+                                                            color: Colors.white
+                                                                .withOpacity(
+                                                                    0.2),
+                                                            boxShadow: [
+                                                              BoxShadow(
+                                                                color: Colors
+                                                                    .black
+                                                                    .withOpacity(
+                                                                        0.08),
+                                                                blurRadius: 8,
+                                                                spreadRadius: 2,
+                                                              ),
+                                                            ],
+                                                          ),
+                                                          child: ClipRRect(
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        20),
+                                                            child:
+                                                                FutureBuilder<
+                                                                    String>(
+                                                              future: _getCachedIngredientImage(
+                                                                  inventoryItems[
+                                                                          index]
+                                                                      [
+                                                                      "name"]!),
+                                                              builder: (context,
+                                                                  snapshot) {
+                                                                if (snapshot
+                                                                        .connectionState ==
+                                                                    ConnectionState
+                                                                        .waiting) {
+                                                                  return SizedBox(
+                                                                    height: 60,
+                                                                    width: 60,
+                                                                    child: Center(
+                                                                        child:
+                                                                            CircularProgressIndicator()),
+                                                                  );
+                                                                } else if (snapshot
+                                                                    .hasError) {
+                                                                  return const Icon(
+                                                                      Icons
+                                                                          .broken_image,
+                                                                      size: 50,
+                                                                      color: Colors
+                                                                          .grey);
+                                                                } else {
+                                                                  final imageUrl =
+                                                                      snapshot.data ??
+                                                                          "https://via.placeholder.com/100";
+                                                                  return Image
+                                                                      .network(
+                                                                    imageUrl,
+                                                                    height: 60,
+                                                                    fit: BoxFit
+                                                                        .cover,
+                                                                    errorBuilder:
+                                                                        (context,
+                                                                            error,
+                                                                            stackTrace) {
+                                                                      return const Icon(
+                                                                          Icons
+                                                                              .broken_image,
+                                                                          size:
+                                                                              50,
+                                                                          color:
+                                                                              Colors.grey);
+                                                                    },
+                                                                  );
+                                                                }
+                                                              },
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        const SizedBox(
+                                                            height: 10),
+                                                        Text(
+                                                          inventoryItems[index]
+                                                              ["name"]!,
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                          textAlign:
+                                                              TextAlign.center,
+                                                          style: TextStyle(
+                                                            fontSize: 16,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color: Colors
+                                                                .grey.shade800,
+                                                          ),
+                                                        ),
+                                                        Container(
+                                                          margin:
+                                                              const EdgeInsets
+                                                                  .only(top: 5),
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .symmetric(
+                                                                  horizontal:
+                                                                      10,
+                                                                  vertical: 4),
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            color: Colors.red
+                                                                .withOpacity(
+                                                                    0.1),
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        10),
+                                                          ),
+                                                          child: Text(
+                                                            "Expires: ${inventoryItems[index]["expiry"]}",
+                                                            style:
+                                                                const TextStyle(
+                                                                    fontSize:
+                                                                        12,
+                                                                    color: Colors
+                                                                        .red),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
                                           );
                                         },
                                       ),
@@ -551,114 +738,4 @@ class _DashboardPageState extends State<DashboardPage> {
       ),
     );
   }
-}
-
-/// _buildInventoryItem now uses a FutureBuilder to fetch and display the ingredient image.
-Widget _buildInventoryItem(Map<String, String> item) {
-  return Container(
-    decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(20),
-      gradient: LinearGradient(
-        colors: [Colors.white.withOpacity(0.3), Colors.white.withOpacity(0.1)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.1),
-          blurRadius: 8,
-          spreadRadius: 3,
-          offset: const Offset(2, 4),
-        ),
-      ],
-    ),
-    child: ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.2),
-            ),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.2),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
-                      blurRadius: 8,
-                      spreadRadius: 2,
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: FutureBuilder<String>(
-                    future: getIngredientImage(item["name"]!),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return SizedBox(
-                          height: 60,
-                          width: 60,
-                          child: Center(child: CircularProgressIndicator()),
-                        );
-                      } else if (snapshot.hasError) {
-                        return const Icon(Icons.broken_image,
-                            size: 50, color: Colors.grey);
-                      } else {
-                        final imageUrl =
-                            snapshot.data ?? "https://via.placeholder.com/100";
-                        return Image.network(
-                          imageUrl,
-                          height: 60,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Icon(Icons.broken_image,
-                                size: 50, color: Colors.grey);
-                          },
-                        );
-                      }
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                item["name"]!,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              Container(
-                margin: const EdgeInsets.only(top: 5),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  "Expires: ${item["expiry"]}",
-                  style: const TextStyle(fontSize: 12, color: Colors.red),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    ),
-  );
 }

@@ -22,21 +22,23 @@ class _WelcomePageState extends State<WelcomePage> {
     await Future.delayed(
         const Duration(seconds: 4)); // Show welcome screen for 2 seconds
 
-    FirebaseAuth.instance.authStateChanges().listen((User? user) {
-      if (user != null) {
-        // ✅ User is logged in, go to MainScreen
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const MainScreen()),
-        );
-      } else {
-        // ❌ User is NOT logged in, go to LoginPage
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const LoginPage()),
-        );
-      }
-    });
+    FirebaseAuth.instance.authStateChanges().listen(
+      (User? user) {
+        if (user != null) {
+          // ✅ User is logged in, go to MainScreen
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const MainScreen()),
+          );
+        } else {
+          // ❌ User is NOT logged in, go to LoginPage
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const LoginPage()),
+          );
+        }
+      },
+    );
   }
 
   @override
@@ -97,7 +99,7 @@ class _WelcomePageState extends State<WelcomePage> {
                   ),
                 ),
                 SizedBox(
-                  height: MediaQuery.sizeOf(context).height * 0.25,
+                  height: MediaQuery.sizeOf(context).height * 0.06,
                 ),
                 const SizedBox(height: 16),
                 RichText(

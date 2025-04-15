@@ -68,7 +68,6 @@ class RecipeDetailPage extends StatelessWidget {
         instructionHtml.toLowerCase() != 'no instructions available.';
 
     final textTheme = Theme.of(context).textTheme;
-    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F7F7),
@@ -407,6 +406,7 @@ class RecipeDetailPage extends StatelessWidget {
                 );
               }
             }
+            Navigator.pop(context);
           },
           backgroundColor:
               isInCalendar ? Colors.red.shade100 : Colors.blue.shade100,

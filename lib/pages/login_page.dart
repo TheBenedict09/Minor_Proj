@@ -29,16 +29,18 @@ class _LoginPageState extends State<LoginPage> {
         password: _passwordController.text.trim(),
       );
 
-      // Navigate to MainScreen on successful login
+      if (!mounted) return; // Check before navigating
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const MainScreen()),
       );
     } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
       setState(() {
         _errorMessage = e.message;
       });
     } finally {
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
       });

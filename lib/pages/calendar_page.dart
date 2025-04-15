@@ -15,6 +15,14 @@ class CalendarPage extends StatefulWidget {
 class _CalendarPageState extends State<CalendarPage> {
   DateTime _selectedDay = DateTime.now();
 
+  Future<void> _refreshCalendar() async {
+    // If your RecipeProvider has a refresh method, call it here
+    // e.g., await Provider.of<RecipeProvider>(context, listen: false).refresh();
+    // Otherwise just wait a moment so the RefreshIndicator shows briefly.
+    await Future.delayed(const Duration(milliseconds: 500));
+    // setState((){}); // Not needed if provider notifies automatically.
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -55,12 +63,23 @@ class _CalendarPageState extends State<CalendarPage> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
                 width: double.infinity,
-                child: Text(
-                  "Recipe Calendar",
-                  style: TextStyle(
-                    fontSize: MediaQuery.sizeOf(context).width * 0.07,
-                    fontWeight: FontWeight.bold,
-                  ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "Recipe Calendar",
+                      style: TextStyle(
+                        fontSize: MediaQuery.sizeOf(context).width * 0.07,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.refresh, size: 28),
+                      onPressed: () async {
+                        await _refreshCalendar();
+                      },
+                    ),
+                  ],
                 ),
               ),
               Expanded(
@@ -172,6 +191,10 @@ class _CalendarPageState extends State<CalendarPage> {
   }
 
   Widget _buildRecipeTile(Map<String, String> recipe) {
+    // Preprocess the title by applying our formatter.
+    final formattedTitle = formatRecipeTitle(recipe["title"] ?? "",
+        maxCharsPerLine: 20, maxLines: 2);
+
     return InkWell(
       onTap: () {
         // Navigate to RecipeDetailPage when the tile is tapped.
@@ -211,22 +234,25 @@ class _CalendarPageState extends State<CalendarPage> {
               top: 16,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
+                  // Use a Text widget that displays the preformatted title.
                   Text(
-                    recipe["title"]!,
+                    formattedTitle,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
                       color: Colors.black,
                     ),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 2,
+                    softWrap: true,
                   ),
+                  const SizedBox(height: 4),
+                  // Cook time shown on its own line.
                   Text(
-                    "Cook Time: ${recipe["cookTime"]}",
+                    "Cook Time: ${recipe["cook_time_minutes"]} min",
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.grey.shade700,
+                      color: Colors.grey.shade800,
                     ),
                   ),
                 ],
@@ -237,4 +263,45 @@ class _CalendarPageState extends State<CalendarPage> {
       ),
     );
   }
+}
+
+// Helper function that formats a title into at most [maxLines] where each line
+// contains at most [maxCharsPerLine] characters. If not all words fit, it appends an ellipsis.
+String formatRecipeTitle(String title,
+    {int maxCharsPerLine = 20, int maxLines = 2}) {
+  List<String> words = title.split(RegExp(r'\s+'));
+  List<String> lines = [];
+  String currentLine = "";
+  int wordIndex = 0;
+
+  // Build each line until either we run out of words or we filled maxLines.
+  while (wordIndex < words.length && lines.length < maxLines) {
+    String word = words[wordIndex];
+    if (currentLine.isEmpty) {
+      currentLine = word;
+      wordIndex++;
+    } else {
+      // Check if adding the next word (with a space) exceeds the limit.
+      if (currentLine.length + 1 + word.length <= maxCharsPerLine) {
+        currentLine += " " + word;
+        wordIndex++;
+      } else {
+        // Cannot add more words to this line, so push it and start a new line.
+        lines.add(currentLine);
+        currentLine = "";
+      }
+    }
+  }
+
+  // Add the last accumulated line if not empty.
+  if (currentLine.isNotEmpty && lines.length < maxLines) {
+    lines.add(currentLine);
+  }
+
+  // If there are leftover words, append an ellipsis on the last line.
+  if (wordIndex < words.length && lines.isNotEmpty) {
+    lines[lines.length - 1] = lines.last + "...";
+  }
+
+  return lines.join("\n");
 }

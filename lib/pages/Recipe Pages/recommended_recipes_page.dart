@@ -3,7 +3,6 @@
 import 'dart:convert';
 import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:minor_proj/components/circle_blur.dart';
 import 'package:minor_proj/pages/Recipe%20Pages/recipe_page.dart';
